@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --rb-blue: #001E62;
+  --rb-red: #C8102E;
+  --rb-silver: #C0C0C0;
+  --rb-dark: #0A0A0F;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--rb-dark);
+  color: white;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0A0F;
+}
+::-webkit-scrollbar-thumb {
+  background: #C8102E;
+  border-radius: 3px;
+}
+
+/* Hide number input spin arrows */
+.spin-hide::-webkit-outer-spin-button,
+.spin-hide::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.spin-hide {
+  -moz-appearance: textfield;
+}
+
+/* Marquee animation */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}

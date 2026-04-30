@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Bull | Покажіть свій напій</title>
+    <style>
+        :root {
+            --bg-color: #0A0A0F;
+            --accent-color: #C8102E;
+            --text-color: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% -20%, rgba(200, 16, 46, 0.15) 0%, transparent 70%);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 550px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            backdrop-filter: blur(20px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        h1 span {
+            color: var(--accent-color);
+        }
+
+        p.subtitle {
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 8px;
+            font-size: 15px;
+        }
+
+        .webcam-container {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        #webcam {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            transition: opacity 0.4s ease;
+            opacity: 0;
+        }
+
+        .loading {
+            position: absolute;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.4);
+            text-align: center;
+            padding: 20px;
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #a00d25;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(200, 16, 46, 0.6);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.2);
+            cursor: not-allowed;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #label-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        .prediction-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .bar-container {
+            width: 100%;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #001E62, var(--accent-color));
+            border-radius: 5px;
+            transition: width 0.15s ease-out;
+            width: 0%;
+        }
+
+        .discount-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(200, 16, 46, 0.85);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(12px);
+            transform: scale(1.05);
+        }
+
+        .discount-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: scale(1);
+        }
+
+        .discount-title {
+            font-size: 28px;
+            margin: 0 0 16px 0;
+            font-weight: 900;
+            line-height: 1.1;
+            text-transform: uppercase;
+        }
+
+        .discount-desc {
+            font-size: 16px;
+            margin: 0;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .discount-badge {
+            margin-top: 20px;
+            background: white;
+            color: var(--accent-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 900;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .overlay-button {
+            margin-top: 25px;
+            background: white;
+            color: var(--bg-color);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: bold;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .overlay-button:hover {
+            background: #e6e6e6;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-logo {
+            height: 48px;
+            margin-bottom: 15px;
+            object-fit: contain;
+            transition: transform 0.2s;
+        }
+
+        .header-logo:hover {
+            transform: scale(1.05);
+        }
+
+        .back-link {
+            align-self: flex-start;
+            margin-top: -15px;
+            margin-bottom: -10px;
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            font-size: 24px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            color: white;
+            transform: translateX(-2px);
+        }
+    </style>
+    <!-- Load TensorFlow.js and TeachableMachine extensions -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <a href="/" class="back-link" title="На головну">←</a>
+        <div class="header">
+            <a href="/">
+                <img src="/logo.png" alt="Red Bull Logo" class="header-logo">
+            </a>
+            <h1>Покажіть свій <span>улюбленний напій</span></h1>
+            <p class="subtitle">AI-сканер від Red Bull Hotel System</p>
+        </div>
+
+        <div class="webcam-container" id="webcam-wrapper">
+            <div class="loading" id="status-text">Натисніть "Увімкнути камеру", щоб почати</div>
+            <video id="webcam" autoplay playsinline muted></video>
+
+            <div id="discount-overlay" class="discount-overlay">
+                <h2 id="overlay-title" class="discount-title"></h2>
+                <p id="overlay-desc" class="discount-desc"></p>
+                <div id="overlay-badge" class="discount-badge"></div>
+                <a href="/hotels" class="overlay-button">Повернутися до готелів</a>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="start-btn" onclick="init()">Увімкнути камеру</button>
+            <button id="stop-btn" onclick="stop()" disabled>Вимкнути</button>
+        </div>
+
+        <div id="label-container">
+            <!-- Prediction bars will be injected here -->
+        </div>
+    </div>
+
+    <script>
+        // The Teachable Machine model URL
+        const URL = "https://teachablemachine.withgoogle.com/models/HTLz9ftH0/";
+
+        let model, maxPredictions;
+        let isRunning = false;
+        let requestAnimId;
+        let discountAlreadyUsed = false; // will be set from server
+
+        const videoElement = document.getElementById("webcam");
+        const statusText = document.getElementById("status-text");
+        const startBtn = document.getElementById("start-btn");
+        const stopBtn = document.getElementById("stop-btn");
+        const labelContainer = document.getElementById("label-container");
+        const overlay = document.getElementById("discount-overlay");
+
+        const overlayTitle = document.getElementById("overlay-title");
+        const overlayDesc = document.getElementById("overlay-desc");
+        const overlayBadge = document.getElementById("overlay-badge");
+
+        // Force exactly 3 classes in UI, even if network cache loads the old 2-class model version
+        const REQUIRED_CLASSES = 3;
+
+        async function init() {
+            startBtn.disabled = true;
+            statusText.style.display = "block";
+            statusText.innerText = "Завантаження штучного інтелекту...";
+            videoElement.style.opacity = "0";
+            overlay.classList.remove("active");
+
+            try {
+                // Check server-side if this user already used their discount
+                try {
+                    const res = await fetch('/api/user/discount-status');
+                    const data = await res.json();
+                    discountAlreadyUsed = !!data.used;
+                    // Also clear stale localStorage if server says no discount used
+                    if (!discountAlreadyUsed) {
+                        localStorage.removeItem('redbull_discount_used_permanently');
+                    }
+                } catch (e) {
+                    // Fallback to localStorage if API unreachable
+                    discountAlreadyUsed = localStorage.getItem('redbull_discount_used_permanently') === 'true';
+                }
+
+                // Initialize model inside init() to ensure it only loads once per session
+                if (!model) {
+                    const ts = new Date().getTime();
+                    // Add ts to bypass edge caching
+                    const modelURL = URL + "model.json?cache=" + ts;
+                    const metadataURL = URL + "metadata.json?cache=" + ts;
+                    model = await tmImage.load(modelURL, metadataURL);
+                    maxPredictions = model.getTotalClasses();
+                }
+
+                statusText.innerText = "Запит доступу до камери...";
+
+                // Native getUserMedia to render to standard <video> element
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "user" },
+                    audio: false
+                });
+
+                videoElement.srcObject = stream;
+
+                await new Promise((resolve) => {
+                    videoElement.onloadedmetadata = () => resolve();
+                });
+
+                videoElement.play();
+                videoElement.style.opacity = "1";
+                statusText.style.display = "none";
+
+                // Scaffold UI bars. Always force at least REQUIRED_CLASSES (3) rows
+                const rowCount = Math.max(maxPredictions, REQUIRED_CLASSES);
+                labelContainer.innerHTML = "";
+
+                for (let i = 0; i < rowCount; i++) {
+                    const row = document.createElement("div");
+                    row.className = "prediction-row";
+
+                    const header = document.createElement("div");
+                    header.className = "prediction-header";
+                    header.innerHTML = `<span class="class-name">Клас ${i + 1}</span><span class="class-score">0%</span>`;
+
+                    const barBox = document.createElement("div");
+                    barBox.className = "bar-container";
+                    const barFill = document.createElement("div");
+                    barFill.className = "bar-fill";
+
+                    barBox.appendChild(barFill);
+                    row.appendChild(header);
+                    row.appendChild(barBox);
+                    labelContainer.appendChild(row);
+                }
+
+                isRunning = true;
+                stopBtn.disabled = false;
+
+                // Kick off loop
+                requestAnimId = window.requestAnimationFrame(loop);
+
+            } catch (err) {
+                console.error("Initialization error:", err);
+                statusText.style.display = "block";
+                statusText.innerText = "Помилка камери: " + err.message;
+                startBtn.disabled = false;
+            }
+        }
+
+        async function loop() {
+            if (isRunning) {
+                await predict();
+                requestAnimId = window.requestAnimationFrame(loop);
+            }
+        }
+
+        async function predict() {
+            if (!model || !videoElement.videoWidth) return;
+
+            const predictions = await model.predict(videoElement);
+
+            const rows = labelContainer.childNodes;
+            for (let i = 0; i < rows.length; i++) {
+                // Safely grab prediction if it exists from the loaded model
+                const pred = predictions[i];
+                const probabilityRaw = pred ? pred.probability : 0;
+                const className = pred ? pred.className : `Клас ${i + 1} (В обробці)`;
+
+                const probability = (probabilityRaw * 100).toFixed(1);
+
+                // Class 1 -> 97% logic
+                if (i === 0 && probabilityRaw >= 0.80 && !overlay.classList.contains("active")) {
+                    triggerOverlay("redbull");
+                }
+
+                // Class 2 -> 97% logic
+                if (i === 1 && probabilityRaw >= 0.97 && !overlay.classList.contains("active")) {
+                    triggerOverlay("other");
+                }
+
+                const row = rows[i];
+                if (!row) continue;
+
+                const header = row.querySelector('.prediction-header');
+                const barFill = row.querySelector('.bar-fill');
+
+                header.querySelector('.class-name').innerText = className;
+                header.querySelector('.class-score').innerText = probability + "%";
+                barFill.style.width = probability + "%";
+            }
+        }
+
+        function triggerOverlay(type) {
+            if (type === "redbull") {
+                if (discountAlreadyUsed) {
+                    overlayTitle.innerHTML = "Дякуємо за лояльність!";
+                    overlayDesc.innerHTML = "Це одноразова акція — ви вже скористались своєю знижкою.<br>Ми цінуємо кожного фаната Red Bull!";
+                    overlayBadge.innerHTML = "АКЦІЯ ВЖЕ ВИКОРИСТАНА";
+                    overlayBadge.style.display = "inline-block";
+                    overlayBadge.style.background = "rgba(255,255,255,0.15)";
+                    overlayBadge.style.border = "1px solid rgba(255,255,255,0.3)";
+                    overlayBadge.style.color = "white";
+                    overlay.classList.add("active");
+                    triggerSuccess();
+                    return;
+                }
+
+                overlayTitle.innerHTML = "Продовжуй свій шлях<br>разом з Red Bull";
+                overlayDesc.innerHTML = "Вам нарахована знижка 10% на перше бронювання готелю!";
+                overlayBadge.innerHTML = "-10% АКТИВОВАНО";
+                overlayBadge.style.display = "block";
+                overlayBadge.style.background = "white";
+                overlayBadge.style.border = "none";
+                overlayBadge.style.color = "var(--accent-color)";
+
+                // Save discount state so it can be picked up by the booking page
+                try {
+                    localStorage.setItem('redbull_discount_10', 'true');
+                } catch (e) { }
+            } else if (type === "other") {
+                overlayTitle.innerHTML = "Непоганий вибір";
+                overlayDesc.innerHTML = "Але могло бути краще... спробуйте Red Bull!";
+                overlayBadge.style.display = "none";
+            }
+            overlay.classList.add("active");
+            triggerSuccess();
+        }
+
+        function triggerSuccess() {
+            isRunning = false;
+            if (requestAnimId) window.cancelAnimationFrame(requestAnimId);
+
+            // Turn off camera completely
+            if (videoElement.srcObject) {
+                const tracks = videoElement.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        }
+
+        function stop() {
+            isRunning = false;
+            if (requestAnimId) {
+                window.cancelAnimationFrame(requestAnimId);
+            }
+            if (videoElement.srcObject) {
+                const tracks = videoElement.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                videoElement.srcObject = null;
+            }
+
+            videoElement.style.opacity = "0";
+            statusText.style.display = "block";
+            statusText.innerText = "Камеру вимкнено.";
+
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+
+            overlay.classList.remove("active");
+
+            // Reset UI bars to 0%
+            const rows = labelContainer.childNodes;
+            rows.forEach(row => {
+                row.querySelector('.class-score').innerText = "0%";
+                row.querySelector('.bar-fill').style.width = "0%";
+            });
+        }
+    </script>
+</body>
+
+</html>

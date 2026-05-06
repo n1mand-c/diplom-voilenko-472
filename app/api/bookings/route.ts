@@ -11,7 +11,10 @@ export async function GET(req: Request) {
     }
 
     const [rows]: any = await pool.query(`
-      SELECT b.*, h.name as hotel_name, h.location as hotel_location, h.image_url as hotel_image 
+      SELECT b.*, 
+             DATE_FORMAT(b.check_in, '%Y-%m-%d') as check_in, 
+             DATE_FORMAT(b.check_out, '%Y-%m-%d') as check_out, 
+             h.name as hotel_name, h.location as hotel_location, h.image_url as hotel_image 
       FROM rb_bookings b
       JOIN rb_hotels h ON b.hotel_id = h.id
       WHERE b.user_id = ?

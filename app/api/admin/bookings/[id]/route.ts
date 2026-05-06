@@ -22,10 +22,19 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
     await pool.query('UPDATE rb_bookings SET status = ? WHERE id = ?', [status, params.id]);
 
     if (status === 'confirmed') {
+      // Auto-confirm transfer splits when booking is confirmed
       await pool.query(
         `UPDATE rb_booking_splits 
          SET status = 'paid', paid_at = NOW() 
          WHERE booking_id = ? AND payment_method = 'transfer' AND status = 'pending'`,
+        [params.id]
+      );
+    } else if (status === 'pending') {
+      // Revert transfer splits back to pending when booking goes back to pending
+      await pool.query(
+        `UPDATE rb_booking_splits 
+         SET status = 'pending', paid_at = NULL 
+         WHERE booking_id = ? AND payment_method = 'transfer' AND status = 'paid'`,
         [params.id]
       );
     }

@@ -1,11 +1,25 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/ui/navbar";
 import { DatePicker } from "@/components/ui/date-picker";
 import { format } from "date-fns";
-import { ArrowLeft, Star, MapPin, Wifi, Dumbbell, Coffee, Mountain, CheckCircle, BedDouble, X, Send, Search, Check, Ban } from "lucide-react";
+import { ArrowLeft, Star, MapPin, Wifi, Dumbbell, Coffee, Mountain, CheckCircle, BedDouble, X, Send, Search, Check, Ban, ChevronLeft, ChevronRight, Users, DollarSign, Sparkles, Waves, CarFront, Car, Utensils, Wine, Wind, Tv } from "lucide-react";
+
+const AMENITIES_ICONS: Record<string, React.ElementType> = {
+  "WiFi": Wifi,
+  "Басейн": Waves,
+  "Спа": Sparkles,
+  "Парковка": CarFront,
+  "Сніданок": Coffee,
+  "Тренажерний зал": Dumbbell,
+  "Трансфер": Car,
+  "Ресторан": Utensils,
+  "Бар": Wine,
+  "Кондиціонер": Wind,
+  "Телевізор": Tv
+};
 
 function StarRating({ value, onChange }: { value: number; onChange?: (v: number) => void }) {
   const [hovered, setHovered] = useState(0);
@@ -37,7 +51,8 @@ export default function HotelDetailsPage() {
   const [roomTypes, setRoomTypes] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const touchStartX = useRef<number | null>(null);
 
   // Review form
   const [reviewRating, setReviewRating] = useState(0);
@@ -50,6 +65,8 @@ export default function HotelDetailsPage() {
   const [availCheckOut, setAvailCheckOut] = useState<string>("");
   const [availResults, setAvailResults] = useState<any[] | null>(null);
   const [availLoading, setAvailLoading] = useState(false);
+  // Room type expand
+  const [expandedRoomType, setExpandedRoomType] = useState<number | null>(null);
 
   const checkAvailability = async () => {
     if (!availCheckIn || !availCheckOut) return;
@@ -119,21 +136,75 @@ export default function HotelDetailsPage() {
 
   const parsedImages: string[] = Array.isArray(hotel.images) ? hotel.images.filter(Boolean) : [];
 
+  const goLightbox = (dir: number) => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((lightboxIndex + dir + parsedImages.length) % parsedImages.length);
+  };
+
   return (
     <div className="min-h-screen bg-transparent">
       <Navbar />
 
-      {/* Lightbox Modal */}
-      {lightboxImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4" onClick={() => setLightboxImage(null)}>
-          <button
-            onClick={() => setLightboxImage(null)}
-            className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors bg-white/10 p-2 rounded-full"
-          >
+
+      {/* Gallery Lightbox with navigation */}
+      {lightboxIndex !== null && parsedImages.length > 0 && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/97 backdrop-blur-sm"
+          onClick={() => setLightboxIndex(null)}
+          onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
+          onTouchEnd={e => {
+            if (touchStartX.current === null) return;
+            const diff = touchStartX.current - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 50) goLightbox(diff > 0 ? 1 : -1);
+            touchStartX.current = null;
+          }}
+        >
+          <button onClick={() => setLightboxIndex(null)} className="absolute top-5 right-5 z-10 text-white/50 hover:text-white bg-white/10 p-2 rounded-full transition-colors">
             <X className="w-6 h-6" />
           </button>
+          {/* Counter */}
+          <div className="absolute top-5 left-1/2 -translate-x-1/2 text-white/50 text-sm bg-black/40 px-4 py-1.5 rounded-full">
+            {lightboxIndex + 1} / {parsedImages.length}
+          </div>
+          {/* Prev */}
+          {parsedImages.length > 1 && (
+            <button
+              onClick={e => { e.stopPropagation(); goLightbox(-1); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/80 text-white p-3 rounded-full transition-all border border-white/10"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+          )}
+          {/* Image */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={lightboxImage} alt="Gallery image" className="max-w-full max-h-[90vh] object-contain rounded-lg" onClick={e => e.stopPropagation()} />
+          <img
+            src={parsedImages[lightboxIndex]}
+            alt={`Фото ${lightboxIndex + 1}`}
+            className="max-w-full max-h-[85vh] object-contain rounded-lg select-none"
+            onClick={e => e.stopPropagation()}
+            draggable={false}
+          />
+          {/* Next */}
+          {parsedImages.length > 1 && (
+            <button
+              onClick={e => { e.stopPropagation(); goLightbox(1); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/80 text-white p-3 rounded-full transition-all border border-white/10"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          )}
+          {/* Dot indicators */}
+          {parsedImages.length > 1 && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+              {parsedImages.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={e => { e.stopPropagation(); setLightboxIndex(i); }}
+                  className={`w-2 h-2 rounded-full transition-all ${i === lightboxIndex ? 'bg-white scale-125' : 'bg-white/30'}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -192,10 +263,12 @@ export default function HotelDetailsPage() {
               <h2 className="text-2xl font-bold text-white mb-4">Галерея ({parsedImages.length} фото)</h2>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                 {parsedImages.map((img: string, idx: number) => (
-                  <div key={idx} onClick={() => setLightboxImage(img)} className="relative h-32 md:h-48 rounded-xl overflow-hidden cursor-pointer border border-white/10 group">
+                  <div key={idx} onClick={() => setLightboxIndex(idx)} className="relative h-32 md:h-48 rounded-xl overflow-hidden cursor-pointer border border-white/10 group">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={img} alt={`${hotel.name} - фото ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs bg-black/50 px-3 py-1.5 rounded-full">Переглянути</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -208,25 +281,82 @@ export default function HotelDetailsPage() {
             <p className="text-white/70 leading-relaxed text-lg whitespace-pre-wrap">{hotel.description}</p>
           </section>
 
-          {/* Room Types */}
           <section>
             <h2 className="text-2xl font-bold text-white mb-6">Типи номерів</h2>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {roomTypes.length > 0 ? roomTypes.map(rt => (
-                <div key={rt.id} className="bg-white/5 border border-white/10 p-5 rounded-2xl">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <BedDouble className="w-5 h-5 text-[#C8102E]" />
-                      <h3 className="text-white font-bold text-lg">{rt.name}</h3>
-                    </div>
+            <div className="space-y-3">
+              {roomTypes.length > 0 ? roomTypes.map(rt => {
+                const isExpanded = expandedRoomType === rt.id;
+                return (
+                  <div key={rt.id} className={`border rounded-2xl overflow-hidden transition-all duration-300 ${
+                    isExpanded ? 'border-[#C8102E]/40 bg-white/8' : 'border-white/10 bg-white/5 hover:border-white/20'
+                  }`}>
+                    {/* Header — always visible */}
+                    <button
+                      onClick={() => setExpandedRoomType(isExpanded ? null : rt.id)}
+                      className="w-full flex items-center justify-between p-5 text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                          isExpanded ? 'bg-[#C8102E]/30' : 'bg-[#C8102E]/20'
+                        }`}>
+                          <BedDouble className="w-5 h-5 text-[#C8102E]" />
+                        </div>
+                        <div>
+                          <h3 className="text-white font-bold text-base">{rt.name}</h3>
+                          <div className="flex items-center gap-3 mt-0.5 text-xs text-white/50">
+                            <span>До {rt.capacity} осіб</span>
+                            <span className="text-[#C8102E] font-semibold">{(Number(hotel.price) + Number(rt.extra_price || 0)).toLocaleString()} ₴/ніч</span>
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className={`w-5 h-5 text-white/30 transition-transform duration-300 ${
+                        isExpanded ? 'rotate-90 text-[#C8102E]' : ''
+                      }`} />
+                    </button>
+
+                    {/* Expanded details panel */}
+                    {isExpanded && (
+                      <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-4">
+                        {/* Stats row */}
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="bg-black/30 rounded-xl p-3">
+                            <div className="text-white/40 text-xs mb-1">Місткість</div>
+                            <div className="text-white font-semibold flex items-center gap-2">
+                              <CheckCircle className="w-4 h-4 text-green-400" /> {rt.capacity} осіб
+                            </div>
+                          </div>
+                          {rt.total_rooms > 0 && (
+                            <div className="bg-black/30 rounded-xl p-3">
+                              <div className="text-white/40 text-xs mb-1">Кімнат цього типу</div>
+                              <div className="text-white font-semibold">{rt.total_rooms} шт.</div>
+                            </div>
+                          )}
+                          <div className="bg-[#C8102E]/10 border border-[#C8102E]/20 rounded-xl p-3">
+                            <div className="text-white/40 text-xs mb-1">Ціна</div>
+                            <div className="text-[#C8102E] font-bold">{(Number(hotel.price) + Number(rt.extra_price || 0)).toLocaleString()} ₴<span className="text-xs font-normal text-[#C8102E]/70">/ніч</span></div>
+                          </div>
+                        </div>
+                        {rt.amenities && Array.isArray(rt.amenities) && rt.amenities.length > 0 && (
+                          <div>
+                            <div className="text-white/40 text-xs mb-2 uppercase tracking-wider">Зручності номера</div>
+                            <div className="flex flex-wrap gap-2">
+                              {rt.amenities.map((am: string) => {
+                                const Icon = AMENITIES_ICONS[am] || CheckCircle;
+                                return (
+                                  <span key={am} className="flex items-center gap-1.5 bg-white/8 border border-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">
+                                    <Icon className="w-3 h-3 text-[#C8102E]" />{am}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="space-y-2 text-sm text-white/60">
-                    <p className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400" /> До {rt.capacity} людей</p>
-                    {Number(rt.extra_price) > 0 && <p className="text-[#C8102E]">Доплата: +{Number(rt.extra_price).toLocaleString()} ₴</p>}
-                  </div>
-                </div>
-              )) : (
-                <div className="text-white/40 col-span-2">Немає доступних номерів для цього готелю.</div>
+                );
+              }) : (
+                <div className="text-white/40">Немає доступних номерів для цього готелю.</div>
               )}
             </div>
           </section>
@@ -270,7 +400,7 @@ export default function HotelDetailsPage() {
                       <div key={rt.id} className="bg-black/20 border border-white/5 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div>
                           <div className="text-white font-bold text-lg">{rt.name}</div>
-                          <div className="text-white/50 text-sm mb-2">до {rt.capacity} гостей {Number(rt.extraPrice) > 0 && ` • доплата +${Number(rt.extraPrice)} ₴`}</div>
+                          <div className="text-white/50 text-sm mb-2">до {rt.capacity} гостей • <span className="text-[#C8102E] font-semibold">{(Number(hotel.price) + Number(rt.extraPrice || 0)).toLocaleString()} ₴/ніч</span></div>
                           {rt.available > 0 ? (
                             <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
                               <Check className="w-4 h-4" /> Є вільні номери ({rt.available} шт.)
@@ -389,10 +519,23 @@ export default function HotelDetailsPage() {
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
             <h3 className="text-white font-bold text-xl mb-4">Зручності</h3>
             <ul className="space-y-4 text-white/70">
-              <li className="flex items-center gap-3"><Wifi className="w-5 h-5 text-[#C8102E]" /> Швидкісний Wi-Fi</li>
-              <li className="flex items-center gap-3"><Dumbbell className="w-5 h-5 text-[#C8102E]" /> Фітнес зона</li>
-              <li className="flex items-center gap-3"><Coffee className="w-5 h-5 text-[#C8102E]" /> Ресторан & Бар</li>
-              <li className="flex items-center gap-3"><Mountain className="w-5 h-5 text-[#C8102E]" /> Доступ до спорту</li>
+              {hotel.amenities && Array.isArray(hotel.amenities) && hotel.amenities.length > 0 ? (
+                hotel.amenities.map((am: string) => {
+                  const Icon = AMENITIES_ICONS[am] || CheckCircle;
+                  return (
+                    <li key={am} className="flex items-center gap-3">
+                      <Icon className="w-4 h-4 text-[#C8102E]" /> {am}
+                    </li>
+                  );
+                })
+              ) : (
+                <>
+                  <li className="flex items-center gap-3"><Wifi className="w-5 h-5 text-[#C8102E]" /> Швидкісний Wi-Fi</li>
+                  <li className="flex items-center gap-3"><Dumbbell className="w-5 h-5 text-[#C8102E]" /> Фітнес зона</li>
+                  <li className="flex items-center gap-3"><Coffee className="w-5 h-5 text-[#C8102E]" /> Ресторан & Бар</li>
+                  <li className="flex items-center gap-3"><Mountain className="w-5 h-5 text-[#C8102E]" /> Доступ до спорту</li>
+                </>
+              )}
             </ul>
           </div>
         </div>

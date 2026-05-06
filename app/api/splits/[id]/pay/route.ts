@@ -20,8 +20,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if (rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     if (rows[0].status === 'paid') return NextResponse.json({ error: 'Already paid' }, { status: 409 });
 
-    if (paymentMethod === 'later') {
-      // Keep as pending, just acknowledge
+    if (paymentMethod === 'later' || paymentMethod === 'transfer') {
+      if (paymentMethod === 'transfer') {
+        await pool.query(`UPDATE rb_booking_splits SET payment_method = 'transfer' WHERE id = ?`, [id]);
+      }
       return NextResponse.json({ success: true, status: 'pending' });
     }
 

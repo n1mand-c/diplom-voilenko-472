@@ -11,7 +11,7 @@ export async function GET() {
     const [rows]: any = await pool.query(`
       SELECT 
         s.*,
-        b.hotel_id, b.check_in, b.check_out, b.guests_count, b.total_price as booking_total,
+        b.hotel_id, DATE_FORMAT(b.check_in, '%Y-%m-%d') as check_in, DATE_FORMAT(b.check_out, '%Y-%m-%d') as check_out, b.guests_count, b.total_price as booking_total,
         b.guest_name as booking_guest_name,
         h.name as hotel_name, h.location as hotel_location, h.image_url as hotel_image,
         u.username as invited_by_username

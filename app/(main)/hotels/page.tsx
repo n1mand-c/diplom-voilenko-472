@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/ui/navbar";
-import { ArrowLeft, Star, MapPin, Wifi, Dumbbell, Coffee, Mountain, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, Star, MapPin, Wifi, Dumbbell, Coffee, Mountain, Search, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 
 const hotels = [
   {
@@ -108,6 +108,133 @@ const sportFilters = [
   { value: "motocross", label: "Мотокрос" },
 ];
 
+function HotelCard({ hotel }: { hotel: any }) {
+  const allImages = [hotel.image_url, ...(Array.isArray(hotel.images) ? hotel.images : [])].filter(Boolean);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStart - touchEnd;
+    if (diff > 50) {
+      setCurrentIndex((prev) => (prev + 1) % allImages.length);
+    } else if (diff < -50) {
+      setCurrentIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+    }
+    setTouchStart(null);
+  };
+
+  return (
+    <Link
+      href={`/hotels/${hotel.id}`}
+      className="group bg-white/5 border border-white/10 hover:border-[#C8102E]/40 rounded-2xl overflow-hidden transition-all hover:scale-[1.02] hover:bg-white/10 block"
+    >
+      <div
+        className="relative h-48 overflow-hidden bg-black"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div
+          className="flex h-full transition-transform duration-300 ease-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {allImages.map((img, i) => (
+            <div key={i} className="min-w-full h-full relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={img}
+                alt={`${hotel.name} - ${i + 1}`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0F]/80 via-transparent" />
+        <div className="absolute top-3 left-3 bg-[#C8102E] text-white text-xs px-2 py-1 rounded-full font-medium z-10">
+          {hotel.sport_label}
+        </div>
+        <div className="absolute top-3 right-3 flex z-10">
+          {Array.from({ length: hotel.stars || 4 }).map((_, i) => (
+            <Star key={i} className="w-3 h-3 text-yellow-400 drop-shadow-md" fill="currentColor" />
+          ))}
+        </div>
+
+        {allImages.length > 1 && (
+          <>
+            {/* Arrows */}
+            <button
+              onClick={prevImage}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            >
+              <ChevronLeft className="w-5 h-5 pr-0.5" />
+            </button>
+            <button
+              onClick={nextImage}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            >
+              <ChevronRight className="w-5 h-5 pl-0.5" />
+            </button>
+
+            {/* Dots */}
+            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-10">
+              {allImages.map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentIndex ? 'bg-white scale-110' : 'bg-white/40'}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      <div className="p-5">
+        <div className="flex items-start justify-between mb-2">
+          <h3 className="text-white font-bold text-lg leading-tight">{hotel.name}</h3>
+          <div className="text-right ml-4 flex-shrink-0">
+            <div className="text-[#C8102E] font-black text-lg">{Number(hotel.price).toLocaleString()} ₴</div>
+            <div className="text-white/30 text-xs">за ніч</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 text-white/40 text-xs mb-3">
+          <MapPin className="w-3 h-3" />
+          <span>{hotel.location}</span>
+        </div>
+        <p className="text-white/50 text-sm mb-4 leading-relaxed line-clamp-2">{hotel.description}</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-yellow-400 text-sm font-bold">
+              <Star className="w-3 h-3" fill="currentColor" />
+              {Number(hotel.rating).toFixed(1)}
+            </div>
+            <span className="text-white/30 text-xs">({hotel.reviews} відгуків)</span>
+          </div>
+        </div>
+        <div className="mt-4 block w-full bg-[#C8102E] hover:bg-[#a00d25] text-white text-center py-2.5 rounded-xl text-sm font-medium transition-colors">
+          Детальніше
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export default function HotelsPage() {
   const [selectedSport, setSelectedSport] = useState("all");
   const [sortBy, setSortBy] = useState("rating");
@@ -177,11 +304,10 @@ export default function HotelsPage() {
               <button
                 key={f.value}
                 onClick={() => setSelectedSport(f.value)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  selectedSport === f.value
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${selectedSport === f.value
                     ? "bg-[#C8102E] text-white"
                     : "bg-white/10 text-white/60 hover:bg-white/20 hover:text-white"
-                }`}
+                  }`}
               >
                 {f.label}
               </button>
@@ -206,57 +332,7 @@ export default function HotelsPage() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((hotel) => (
-              <div
-                key={hotel.id}
-                className="group bg-white/5 border border-white/10 hover:border-[#C8102E]/40 rounded-2xl overflow-hidden transition-all hover:scale-[1.02] hover:bg-white/8"
-              >
-                <div className="relative h-48 overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={hotel.image_url}
-                    alt={hotel.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0F] via-transparent" />
-                  <div className="absolute top-3 left-3 bg-[#C8102E] text-white text-xs px-2 py-1 rounded-full font-medium">
-                    {hotel.sport_label}
-                  </div>
-                  <div className="absolute top-3 right-3 flex">
-                    {Array.from({ length: hotel.stars || 4 }).map((_, i) => (
-                      <Star key={i} className="w-3 h-3 text-yellow-400" fill="currentColor" />
-                    ))}
-                  </div>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-white font-bold text-lg leading-tight">{hotel.name}</h3>
-                    <div className="text-right ml-4 flex-shrink-0">
-                      <div className="text-[#C8102E] font-black text-lg">{Number(hotel.price).toLocaleString()} ₴</div>
-                      <div className="text-white/30 text-xs">за ніч</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 text-white/40 text-xs mb-3">
-                    <MapPin className="w-3 h-3" />
-                    <span>{hotel.location}</span>
-                  </div>
-                  <p className="text-white/50 text-sm mb-4 leading-relaxed line-clamp-2">{hotel.description}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 text-yellow-400 text-sm font-bold">
-                        <Star className="w-3 h-3" fill="currentColor" />
-                        {Number(hotel.rating).toFixed(1)}
-                      </div>
-                      <span className="text-white/30 text-xs">({hotel.reviews} відгуків)</span>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/hotels/${hotel.id}`}
-                    className="mt-4 block w-full bg-[#C8102E] hover:bg-[#a00d25] text-white text-center py-2.5 rounded-xl text-sm font-medium transition-colors"
-                  >
-                    Детальніше
-                  </Link>
-                </div>
-              </div>
+              <HotelCard key={hotel.id} hotel={hotel} />
             ))}
           </div>
         )}

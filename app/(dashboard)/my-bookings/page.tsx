@@ -67,6 +67,25 @@ export default function MyBookingsPage() {
   const pendingSplits = splits.filter(s => s.status === "pending");
   const paidSplits = splits.filter(s => s.status === "paid");
 
+  const handleCancelBooking = async (id: number) => {
+    if (!confirm("Ви впевнені, що хочете скасувати бронювання?")) return;
+    try {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancelled" })
+      });
+      if (res.ok) {
+        fetchData();
+      } else {
+        const err = await res.json();
+        alert("Помилка скасування: " + err.error);
+      }
+    } catch(e) {
+      alert("Помилка сервера");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-transparent">
       <Navbar />
@@ -179,7 +198,28 @@ export default function MyBookingsPage() {
                             {booking.hotel_location}
                           </div>
                         </div>
-                        {getStatusBadge(booking.status)}
+                        <div className="flex flex-col items-end gap-2">
+                          {getStatusBadge(booking.status)}
+                          {booking.status !== 'cancelled' && (() => {
+                            const checkIn = new Date(booking.check_in);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            checkIn.setHours(0, 0, 0, 0);
+                            const daysUntil = Math.ceil((checkIn.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                            if (daysUntil < 3) {
+                              return (
+                                <span className="flex items-center gap-1 text-white/30 text-xs">
+                                  <AlertCircle className="w-3 h-3" /> Скасування недоступне
+                                </span>
+                              );
+                            }
+                            return (
+                              <button onClick={() => handleCancelBooking(booking.id)} className="text-red-400 text-xs hover:text-red-300 underline underline-offset-2">
+                                Скасувати бронювання
+                              </button>
+                            );
+                          })()}
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 gap-6 mt-auto">
                         <div className="bg-black/30 p-4 rounded-xl border border-white/5">
@@ -206,7 +246,6 @@ export default function MyBookingsPage() {
         )}
       </div>
 
-      {/* ── PAY MODAL ── */}
       {payModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="bg-[#1a1a2e] border border-white/10 p-6 rounded-2xl w-full max-w-sm">
@@ -222,7 +261,7 @@ export default function MyBookingsPage() {
                 <Banknote className="w-5 h-5" /> Переказ
               </button>
             </div>
-            
+
             {payMethod === "card" && (
               <div className="space-y-4 mb-5">
                 <div>
@@ -250,17 +289,40 @@ export default function MyBookingsPage() {
             )}
 
             {payMethod === "transfer" && (
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 mb-4 text-xs text-white/60 space-y-1">
-                <p><strong className="text-white">IBAN:</strong> UA12 3456 7890 1234 5678 90</p>
-                <p><strong className="text-white">Банк:</strong> ПриватБанк</p>
-                <p><strong className="text-white">Призначення:</strong> Split #{payModal.splitId}</p>
+              <div className="mb-5 space-y-3">
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 space-y-2">
+                  <div className="text-blue-400 text-xs font-bold uppercase tracking-wider mb-2">Реквізити для переказу</div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/50">IBAN</span>
+                    <span className="text-white font-mono font-medium">UA12 3456 7890 1234 5678 90</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/50">Банк</span>
+                    <span className="text-white">ПриватБанк</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/50">Призначення</span>
+                    <span className="text-white">Split #{payModal.splitId}</span>
+                  </div>
+                  <div className="flex justify-between text-sm border-t border-blue-500/20 pt-2 mt-1">
+                    <span className="text-white/50">Сума</span>
+                    <span className="text-yellow-400 font-bold">{payModal.amount.toLocaleString()} ₴</span>
+                  </div>
+                </div>
+                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-4 py-3 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-yellow-400 mt-0.5 shrink-0" />
+                  <p className="text-xs text-white/60">
+                    Після натискання кнопки <strong className="text-white">"Підтвердити переказ"</strong> ваш запит перейде в статус <strong className="text-yellow-400">"Очікує"</strong> — адміністратор підтвердить оплату після надходження коштів.
+                  </p>
+                </div>
               </div>
             )}
+
             <div className="flex gap-3">
               <button onClick={() => setPayModal(null)} className="flex-1 py-2.5 border border-white/10 text-white/50 hover:text-white rounded-xl text-sm transition-colors">Закрити</button>
               <button disabled={payLoading} onClick={handlePay}
-                className="flex-1 bg-[#C8102E] hover:bg-[#a00d25] text-white py-2.5 rounded-xl text-sm font-bold transition-colors disabled:opacity-50">
-                {payLoading ? "..." : "Підтвердити"}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors disabled:opacity-50 bg-[#C8102E] hover:bg-[#a00d25] text-white">
+                {payLoading ? "..." : payMethod === "transfer" ? "Підтвердити переказ" : "Оплатити"}
               </button>
             </div>
           </div>

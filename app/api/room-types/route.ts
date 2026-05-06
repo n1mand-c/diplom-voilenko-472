@@ -24,7 +24,16 @@ export async function GET(req: Request) {
     if (!hotelId) return NextResponse.json({ error: 'hotelId required' }, { status: 400 });
 
     const [rows]: any = await pool.query('SELECT * FROM rb_room_types WHERE hotel_id = ?', [hotelId]);
-    return NextResponse.json({ roomTypes: rows });
+    
+    const parsedRows = rows.map((r: any) => {
+      let amenities = r.amenities;
+      if (typeof amenities === 'string') {
+        try { amenities = JSON.parse(amenities); } catch(e) { amenities = []; }
+      }
+      return { ...r, amenities };
+    });
+
+    return NextResponse.json({ roomTypes: parsedRows });
   } catch (error) {
     console.error('Error fetching room types', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
@@ -39,12 +48,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const { hotelId, name, capacity, extraPrice, totalRooms } = await req.json();
+    const { hotelId, name, capacity, extraPrice, totalRooms, amenities } = await req.json();
+    const amenitiesJson = JSON.stringify(Array.isArray(amenities) ? amenities : []);
 
     const [result]: any = await pool.query(`
-      INSERT INTO rb_room_types (hotel_id, name, capacity, extra_price, total_rooms)
-      VALUES (?, ?, ?, ?, ?)
-    `, [hotelId, name, capacity, extraPrice || 0, totalRooms || 1]);
+      INSERT INTO rb_room_types (hotel_id, name, capacity, extra_price, total_rooms, amenities)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `, [hotelId, name, capacity, extraPrice || 0, totalRooms || 1, amenitiesJson]);
 
     return NextResponse.json({ success: true, roomTypeId: result.insertId });
   } catch (error: any) {

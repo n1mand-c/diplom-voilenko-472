@@ -7,10 +7,10 @@ import { LogOut, User as UserIcon } from "lucide-react";
 function RedBullLogo({ className }: { className?: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img 
-      src="/logo.png" 
-      alt="Red Bull Logo" 
-      className={className} 
+    <img
+      src="/logo.png"
+      alt="Red Bull Logo"
+      className={className}
     />
   );
 }
@@ -47,13 +47,16 @@ export function Navbar({ transparent = false }: { transparent?: boolean }) {
         >
           Готелі
         </Link>
-        
+
         {user ? (
           <>
             {(user.role === "ROLE_ADMIN" || user.role === "ROLE_MANAGER") ? (
               <Link href="/admin" className="text-white/70 hover:text-white transition-colors text-xs md:text-sm font-medium">Управління</Link>
             ) : (
-              <Link href="/my-bookings" className="text-white/70 hover:text-white transition-colors text-xs md:text-sm font-medium">Мої бронювання</Link>
+              <>
+                 <Link href="/my-bookings" className="text-white/70 hover:text-white transition-colors text-xs md:text-sm font-medium">Мої бронювання</Link>
+                 <Link href="/contacts" className="text-white/70 hover:text-white transition-colors text-xs md:text-sm font-medium">Контакти</Link>
+              </>
             )}
 
             <div className="flex items-center gap-2 md:gap-4 border-l border-white/10 pl-3 ml-1 md:pl-6 md:ml-2">
@@ -63,7 +66,7 @@ export function Navbar({ transparent = false }: { transparent?: boolean }) {
                 </div>
                 <span className="text-white text-sm font-medium">{user.username}</span>
               </div>
-              <button 
+              <button
                 onClick={handleLogout}
                 className="text-white/50 hover:text-[#C8102E] transition-colors"
                 title="Вийти"

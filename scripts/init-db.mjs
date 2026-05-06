@@ -56,10 +56,46 @@ async function initDB() {
         total_price DECIMAL(10,2) NOT NULL,
         payment_method VARCHAR(50) DEFAULT 'card',
         status VARCHAR(50) DEFAULT 'pending',
+        discount_applied BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (hotel_id) REFERENCES rb_hotels(id)
       )
     `);
+
+    // 4. Support Tickets
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS rb_support_tickets (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        hotel_id INT,
+        subject VARCHAR(255) NOT NULL,
+        status VARCHAR(50) DEFAULT 'open',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (hotel_id) REFERENCES rb_hotels(id) ON DELETE SET NULL
+      )
+    `);
+
+    // 5. Support Messages
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS rb_support_messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        ticket_id INT NOT NULL,
+        sender_role VARCHAR(50) NOT NULL,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (ticket_id) REFERENCES rb_support_tickets(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Ensure columns exist (Alter tables)
+    try {
+      await pool.query('ALTER TABLE rb_hotels ADD COLUMN amenities JSON');
+      await pool.query('ALTER TABLE rb_hotels ADD COLUMN images JSON');
+    } catch(e) {}
+    try {
+      await pool.query('ALTER TABLE rb_room_types ADD COLUMN amenities JSON');
+      await pool.query('ALTER TABLE rb_room_types ADD COLUMN total_rooms INT DEFAULT 1');
+    } catch(e) {}
 
     console.log("Datatables rb_hotels, rb_room_types, and rb_bookings created successfully!");
 

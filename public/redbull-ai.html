@@ -28,6 +28,132 @@
             min-height: 100vh;
         }
 
+        /* Navbar Style - Matching the main site exactly */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: #0A0A0F;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 32px;
+        }
+
+        .navbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+        
+        .navbar-logo:hover {
+            transform: scale(1.02);
+        }
+
+        .navbar-logo img {
+            height: 24px;
+        }
+
+        .navbar-logo span {
+            color: white;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            font-size: 16px;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .nav-btn {
+            background: #FFC906;
+            color: #1a1a1a;
+            padding: 8px 20px;
+            border-radius: 9999px;
+            font-weight: bold;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(255, 201, 6, 0.2);
+        }
+
+        .nav-btn:hover {
+            background: #e6b500;
+            transform: scale(1.05);
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: white;
+        }
+
+        .user-profile {
+            display: none; /* Hidden until loaded */
+            align-items: center;
+            gap: 16px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding-left: 24px;
+            margin-left: 8px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-name {
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            color: rgba(255, 255, 255, 0.5);
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .logout-btn:hover {
+            color: #C8102E;
+        }
+
+        .login-link {
+            background: #C8102E;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 9999px;
+            font-weight: bold;
+            font-size: 14px;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .login-link:hover {
+            background: #a00d25;
+        }
+
         .container {
             width: 90%;
             max-width: 550px;
@@ -40,6 +166,7 @@
             flex-direction: column;
             gap: 24px;
             backdrop-filter: blur(20px);
+            margin-top: 80px;
         }
 
         .header {
@@ -53,7 +180,6 @@
             font-weight: 900;
             letter-spacing: -0.5px;
             text-transform: uppercase;
-            white-space: nowrap;
         }
 
         h1 span {
@@ -77,7 +203,6 @@
             align-items: center;
             justify-content: center;
             border: 1px solid var(--border-color);
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
         }
 
         #webcam {
@@ -104,7 +229,7 @@
             gap: 12px;
         }
 
-        button {
+        .btn-action {
             background-color: var(--accent-color);
             color: white;
             border: none;
@@ -118,17 +243,13 @@
             letter-spacing: 0.5px;
         }
 
-        button:hover:not(:disabled) {
+        .btn-action:hover:not(:disabled) {
             background-color: #a00d25;
             transform: translateY(-2px);
             box-shadow: 0 10px 20px -10px rgba(200, 16, 46, 0.6);
         }
 
-        button:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        button:disabled {
+        .btn-action:disabled {
             background-color: rgba(255, 255, 255, 0.05);
             color: rgba(255, 255, 255, 0.2);
             cursor: not-allowed;
@@ -244,34 +365,12 @@
         .overlay-button:hover {
             background: #e6e6e6;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
 
-        .header-logo {
+        .header-logo-img {
             height: 48px;
             margin-bottom: 15px;
             object-fit: contain;
-            transition: transform 0.2s;
-        }
-
-        .header-logo:hover {
-            transform: scale(1.05);
-        }
-
-        .back-link {
-            align-self: flex-start;
-            margin-top: -15px;
-            margin-bottom: -10px;
-            color: rgba(255, 255, 255, 0.5);
-            text-decoration: none;
-            font-size: 24px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .back-link:hover {
-            color: white;
-            transform: translateX(-2px);
         }
     </style>
     <!-- Load TensorFlow.js and TeachableMachine extensions -->
@@ -280,11 +379,23 @@
 </head>
 
 <body>
+    <nav class="navbar">
+        <a href="/" class="navbar-logo">
+            <img src="/logo.png" alt="Red Bull Logo">
+            <span>RED BULL HOTELS</span>
+        </a>
+        <div class="navbar-right" id="nav-right">
+            <a href="/hotels" class="nav-btn">Готелі</a>
+            <div id="auth-links" style="display: flex; align-items: center; gap: 24px;">
+                <!-- Links will be injected here via JS -->
+            </div>
+        </div>
+    </nav>
+
     <div class="container">
-        <a href="/" class="back-link" title="На головну">←</a>
         <div class="header">
             <a href="/">
-                <img src="/logo.png" alt="Red Bull Logo" class="header-logo">
+                <img src="/logo.png" alt="Red Bull Logo" class="header-logo-img">
             </a>
             <h1>Покажіть свій <span>улюбленний напій</span></h1>
             <p class="subtitle">AI-сканер від Red Bull Hotel System</p>
@@ -303,8 +414,8 @@
         </div>
 
         <div class="controls">
-            <button id="start-btn" onclick="init()">Увімкнути камеру</button>
-            <button id="stop-btn" onclick="stop()" disabled>Вимкнути</button>
+            <button id="start-btn" class="btn-action" onclick="init()">Увімкнути камеру</button>
+            <button id="stop-btn" class="btn-action" onclick="stop()" disabled>Вимкнути</button>
         </div>
 
         <div id="label-container">
@@ -313,27 +424,50 @@
     </div>
 
     <script>
-        // The Teachable Machine model URL
+        // --- Navbar Logic ---
+        async function loadUser() {
+            const authLinks = document.getElementById('auth-links');
+            try {
+                const res = await fetch('/api/auth/me');
+                const data = await res.json();
+                
+                if (data.user) {
+                    authLinks.innerHTML = `
+                        <a href="/my-bookings" class="nav-link">Мої бронювання</a>
+                        <a href="/contacts" class="nav-link">Контакти</a>
+                        <div class="user-profile" style="display: flex;">
+                            <div class="user-avatar">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: rgba(255,255,255,0.7)"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            </div>
+                            <span class="user-name">${data.user.username}</span>
+                            <button onclick="logout()" class="logout-btn" title="Вийти">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    authLinks.innerHTML = `<a href="/login" class="login-link">Увійти</a>`;
+                }
+            } catch (e) {
+                authLinks.innerHTML = `<a href="/login" class="login-link">Увійти</a>`;
+            }
+        }
+
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.reload();
+        }
+
+        loadUser();
+
+        // --- AI Logic ---
         const URL = "https://teachablemachine.withgoogle.com/models/HTLz9ftH0/";
+        let model, maxPredictions, isRunning = false, requestAnimId, discountAlreadyUsed = false;
 
-        let model, maxPredictions;
-        let isRunning = false;
-        let requestAnimId;
-        let discountAlreadyUsed = false; // will be set from server
-
-        const videoElement = document.getElementById("webcam");
-        const statusText = document.getElementById("status-text");
-        const startBtn = document.getElementById("start-btn");
-        const stopBtn = document.getElementById("stop-btn");
-        const labelContainer = document.getElementById("label-container");
-        const overlay = document.getElementById("discount-overlay");
-
-        const overlayTitle = document.getElementById("overlay-title");
-        const overlayDesc = document.getElementById("overlay-desc");
-        const overlayBadge = document.getElementById("overlay-badge");
-
-        // Force exactly 3 classes in UI, even if network cache loads the old 2-class model version
-        const REQUIRED_CLASSES = 3;
+        const videoElement = document.getElementById("webcam"), statusText = document.getElementById("status-text");
+        const startBtn = document.getElementById("start-btn"), stopBtn = document.getElementById("stop-btn");
+        const labelContainer = document.getElementById("label-container"), overlay = document.getElementById("discount-overlay");
+        const overlayTitle = document.getElementById("overlay-title"), overlayDesc = document.getElementById("overlay-desc"), overlayBadge = document.getElementById("overlay-badge");
 
         async function init() {
             startBtn.disabled = true;
@@ -343,204 +477,86 @@
             overlay.classList.remove("active");
 
             try {
-                // Check server-side if this user already used their discount
-                try {
-                    const res = await fetch('/api/user/discount-status');
-                    const data = await res.json();
-                    discountAlreadyUsed = !!data.used;
-                    // Also clear stale localStorage if server says no discount used
-                    if (!discountAlreadyUsed) {
-                        localStorage.removeItem('redbull_discount_used_permanently');
-                    }
-                } catch (e) {
-                    // Fallback to localStorage if API unreachable
-                    discountAlreadyUsed = localStorage.getItem('redbull_discount_used_permanently') === 'true';
-                }
+                const res = await fetch('/api/user/discount-status').then(r => r.json()).catch(() => ({used: false}));
+                discountAlreadyUsed = !!res.used;
 
-                // Initialize model inside init() to ensure it only loads once per session
                 if (!model) {
-                    const ts = new Date().getTime();
-                    // Add ts to bypass edge caching
-                    const modelURL = URL + "model.json?cache=" + ts;
-                    const metadataURL = URL + "metadata.json?cache=" + ts;
-                    model = await tmImage.load(modelURL, metadataURL);
+                    const ts = Date.now();
+                    model = await tmImage.load(URL + "model.json?c=" + ts, URL + "metadata.json?c=" + ts);
                     maxPredictions = model.getTotalClasses();
                 }
 
                 statusText.innerText = "Запит доступу до камери...";
-
-                // Native getUserMedia to render to standard <video> element
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "user" },
-                    audio: false
-                });
-
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
                 videoElement.srcObject = stream;
-
-                await new Promise((resolve) => {
-                    videoElement.onloadedmetadata = () => resolve();
-                });
-
+                await new Promise(r => videoElement.onloadedmetadata = r);
                 videoElement.play();
                 videoElement.style.opacity = "1";
                 statusText.style.display = "none";
 
-                // Scaffold UI bars. Always force at least REQUIRED_CLASSES (3) rows
-                const rowCount = Math.max(maxPredictions, REQUIRED_CLASSES);
                 labelContainer.innerHTML = "";
-
-                for (let i = 0; i < rowCount; i++) {
-                    const row = document.createElement("div");
-                    row.className = "prediction-row";
-
-                    const header = document.createElement("div");
-                    header.className = "prediction-header";
-                    header.innerHTML = `<span class="class-name">Клас ${i + 1}</span><span class="class-score">0%</span>`;
-
-                    const barBox = document.createElement("div");
-                    barBox.className = "bar-container";
-                    const barFill = document.createElement("div");
-                    barFill.className = "bar-fill";
-
-                    barBox.appendChild(barFill);
-                    row.appendChild(header);
-                    row.appendChild(barBox);
-                    labelContainer.appendChild(row);
+                for (let i = 0; i < Math.max(maxPredictions, 3); i++) {
+                    labelContainer.innerHTML += `<div class="prediction-row"><div class="prediction-header"><span class="class-name">Клас ${i + 1}</span><span class="class-score">0%</span></div><div class="bar-container"><div class="bar-fill"></div></div></div>`;
                 }
 
-                isRunning = true;
-                stopBtn.disabled = false;
-
-                // Kick off loop
+                isRunning = true; stopBtn.disabled = false;
                 requestAnimId = window.requestAnimationFrame(loop);
-
             } catch (err) {
-                console.error("Initialization error:", err);
-                statusText.style.display = "block";
-                statusText.innerText = "Помилка камери: " + err.message;
+                statusText.innerText = "Помилка: " + err.message;
                 startBtn.disabled = false;
             }
         }
 
-        async function loop() {
-            if (isRunning) {
-                await predict();
-                requestAnimId = window.requestAnimationFrame(loop);
-            }
-        }
+        async function loop() { if (isRunning) { await predict(); requestAnimId = window.requestAnimationFrame(loop); } }
 
         async function predict() {
             if (!model || !videoElement.videoWidth) return;
-
             const predictions = await model.predict(videoElement);
-
             const rows = labelContainer.childNodes;
-            for (let i = 0; i < rows.length; i++) {
-                // Safely grab prediction if it exists from the loaded model
-                const pred = predictions[i];
-                const probabilityRaw = pred ? pred.probability : 0;
-                const className = pred ? pred.className : `Клас ${i + 1} (В обробці)`;
-
-                const probability = (probabilityRaw * 100).toFixed(1);
-
-                // Class 1 -> 97% logic
-                if (i === 0 && probabilityRaw >= 0.80 && !overlay.classList.contains("active")) {
-                    triggerOverlay("redbull");
-                }
-
-                // Class 2 -> 97% logic
-                if (i === 1 && probabilityRaw >= 0.97 && !overlay.classList.contains("active")) {
-                    triggerOverlay("other");
-                }
-
+            predictions.forEach((pred, i) => {
+                if (i >= rows.length) return;
+                const prob = pred.probability;
+                if (i === 0 && prob >= 0.80 && !overlay.classList.contains("active")) triggerOverlay("redbull");
+                if (i === 1 && prob >= 0.97 && !overlay.classList.contains("active")) triggerOverlay("other");
+                
                 const row = rows[i];
-                if (!row) continue;
-
-                const header = row.querySelector('.prediction-header');
-                const barFill = row.querySelector('.bar-fill');
-
-                header.querySelector('.class-name').innerText = className;
-                header.querySelector('.class-score').innerText = probability + "%";
-                barFill.style.width = probability + "%";
-            }
+                row.querySelector('.class-name').innerText = pred.className;
+                row.querySelector('.class-score').innerText = (prob * 100).toFixed(1) + "%";
+                row.querySelector('.bar-fill').style.width = (prob * 100) + "%";
+            });
         }
 
         function triggerOverlay(type) {
             if (type === "redbull") {
                 if (discountAlreadyUsed) {
-                    overlayTitle.innerHTML = "Дякуємо за лояльність!";
-                    overlayDesc.innerHTML = "Це одноразова акція — ви вже скористались своєю знижкою.<br>Ми цінуємо кожного фаната Red Bull!";
-                    overlayBadge.innerHTML = "АКЦІЯ ВЖЕ ВИКОРИСТАНА";
-                    overlayBadge.style.display = "inline-block";
-                    overlayBadge.style.background = "rgba(255,255,255,0.15)";
-                    overlayBadge.style.border = "1px solid rgba(255,255,255,0.3)";
-                    overlayBadge.style.color = "white";
-                    overlay.classList.add("active");
-                    triggerSuccess();
-                    return;
-                }
-
-                overlayTitle.innerHTML = "Продовжуй свій шлях<br>разом з Red Bull";
-                overlayDesc.innerHTML = "Вам нарахована знижка 10% на перше бронювання готелю!";
-                overlayBadge.innerHTML = "-10% АКТИВОВАНО";
-                overlayBadge.style.display = "block";
-                overlayBadge.style.background = "white";
-                overlayBadge.style.border = "none";
-                overlayBadge.style.color = "var(--accent-color)";
-
-                // Save discount state so it can be picked up by the booking page
-                try {
+                    overlayTitle.innerText = "Дякуємо за лояльність!";
+                    overlayDesc.innerHTML = "Ви вже використали свою знижку. Ми цінуємо вашу підтримку!";
+                    overlayBadge.innerText = "ВИКОРИСТАНО";
+                } else {
+                    overlayTitle.innerHTML = "Продовжуй свій шлях<br>разом з Red Bull";
+                    overlayDesc.innerText = "Вам нарахована знижка 10% на перше бронювання готелю!";
+                    overlayBadge.innerText = "-10% АКТИВОВАНО";
                     localStorage.setItem('redbull_discount_10', 'true');
-                } catch (e) { }
-            } else if (type === "other") {
-                overlayTitle.innerHTML = "Непоганий вибір";
-                overlayDesc.innerHTML = "Але могло бути краще... спробуйте Red Bull!";
+                }
+            } else {
+                overlayTitle.innerText = "Непоганий вибір";
+                overlayDesc.innerText = "Але з Red Bull було б краще!";
                 overlayBadge.style.display = "none";
             }
             overlay.classList.add("active");
-            triggerSuccess();
-        }
-
-        function triggerSuccess() {
             isRunning = false;
-            if (requestAnimId) window.cancelAnimationFrame(requestAnimId);
-
-            // Turn off camera completely
-            if (videoElement.srcObject) {
-                const tracks = videoElement.srcObject.getTracks();
-                tracks.forEach(track => track.stop());
-            }
-
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
+            if (videoElement.srcObject) videoElement.srcObject.getTracks().forEach(t => t.stop());
+            startBtn.disabled = false; stopBtn.disabled = true;
         }
 
         function stop() {
             isRunning = false;
-            if (requestAnimId) {
-                window.cancelAnimationFrame(requestAnimId);
-            }
-            if (videoElement.srcObject) {
-                const tracks = videoElement.srcObject.getTracks();
-                tracks.forEach(track => track.stop());
-                videoElement.srcObject = null;
-            }
-
+            if (videoElement.srcObject) videoElement.srcObject.getTracks().forEach(t => t.stop());
             videoElement.style.opacity = "0";
             statusText.style.display = "block";
             statusText.innerText = "Камеру вимкнено.";
-
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
-
+            startBtn.disabled = false; stopBtn.disabled = true;
             overlay.classList.remove("active");
-
-            // Reset UI bars to 0%
-            const rows = labelContainer.childNodes;
-            rows.forEach(row => {
-                row.querySelector('.class-score').innerText = "0%";
-                row.querySelector('.bar-fill').style.width = "0%";
-            });
         }
     </script>
 </body>

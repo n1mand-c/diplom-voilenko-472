@@ -10,9 +10,13 @@ export async function GET(req: Request) {
     }
 
     let query = `
-      SELECT b.*, h.name as hotel_name 
+      SELECT b.*, 
+             DATE_FORMAT(b.check_in, '%Y-%m-%d') as check_in, 
+             DATE_FORMAT(b.check_out, '%Y-%m-%d') as check_out, 
+             h.name as hotel_name, u.email as user_email
       FROM rb_bookings b
       JOIN rb_hotels h ON b.hotel_id = h.id
+      LEFT JOIN users u ON b.user_id = u.id
     `;
     let queryParams: any[] = [];
 

@@ -30,11 +30,15 @@ export function DatePicker({
   setDate,
   placeholder = "Оберіть дату",
   className,
+  minDate,
+  allowPast,
 }: {
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
   placeholder?: string;
   className?: string;
+  minDate?: Date;
+  allowPast?: boolean;
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [viewMonth, setViewMonth] = React.useState<Date>(date ?? new Date());
@@ -108,6 +112,12 @@ export function DatePicker({
               setIsOpen(false);
             }}
             initialFocus
+            disabled={allowPast ? undefined : (d) => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const compareDate = minDate ?? today;
+              return d < compareDate;
+            }}
           />
         </div>
       )}

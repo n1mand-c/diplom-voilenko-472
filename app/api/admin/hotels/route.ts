@@ -33,7 +33,13 @@ export async function GET(req: Request) {
       if (typeof images === 'string') {
         try { images = JSON.parse(images); } catch(e) { images = []; }
       }
-      return { ...h, images };
+      if (!Array.isArray(images)) images = [];
+      let amenities = h.amenities;
+      if (typeof amenities === 'string') {
+        try { amenities = JSON.parse(amenities); } catch(e) { amenities = []; }
+      }
+      if (!Array.isArray(amenities)) amenities = [];
+      return { ...h, images, amenities };
     });
 
     return NextResponse.json({ hotels: parsedRows });
@@ -51,32 +57,18 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, location, sport, sportLabel, stars, price, imageUrl, description, reviews, images } = body;
+    const { name, location, sport, sportLabel, stars, price, imageUrl, description, reviews, images, amenities } = body;
+
+    const imagesJson = JSON.stringify(Array.isArray(images) ? images : []);
+    const amenitiesJson = JSON.stringify(Array.isArray(amenities) ? amenities : []);
 
     const [result]: any = await pool.query(`
-      INSERT INTO rb_hotels (name, location, sport, sport_label, stars, price, image_url, description, reviews)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [name, location, sport, sportLabel, stars || 4, price, imageUrl, description || '', reviews || 0]);
+      INSERT INTO rb_hotels (name, location, sport, sport_label, stars, price, image_url, description, reviews, images, amenities)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [name, location, sport, sportLabel, stars || 4, price, imageUrl, description || '', reviews || 0, imagesJson, amenitiesJson]);
 
     const hotelId = result.insertId;
 
-    // Normalize and save images - handle both arrays and comma-joined strings
-    const normalizedImages: string[] = [];
-    if (Array.isArray(images)) {
-      for (const item of images) {
-        if (typeof item === 'string') {
-          item.split(',').map((u: string) => u.trim()).filter(Boolean).forEach((u: string) => normalizedImages.push(u));
-        }
-      }
-    } else if (typeof images === 'string' && images) {
-      images.split(',').map((u: string) => u.trim()).filter(Boolean).forEach((u: string) => normalizedImages.push(u));
-    }
-
-    for (const url of normalizedImages) {
-      if (url) {
-        await pool.query('INSERT INTO rb_hotel_images (hotel_id, image_url) VALUES (?, ?)', [hotelId, url]);
-      }
-    }
 
     return NextResponse.json({ success: true, hotelId });
   } catch (error) {

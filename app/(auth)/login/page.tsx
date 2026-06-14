@@ -12,10 +12,16 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.username || !form.password) {
       return setError("Всі поля обов'язкові для заповнення");
+    }
+    // If the input looks like an email, validate its format
+    if (form.username.includes("@") && !emailRegex.test(form.username)) {
+      return setError("Введіть коректний email (наприклад: user@gmail.com)");
     }
     setError("");
     setLoading(true);

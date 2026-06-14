@@ -132,11 +132,28 @@ export default function AdminPage() {
     const images = editImages.filter(url => url.trim() !== '');
 
     // Normalize field names: DB fields use snake_case but API expects camelCase
+    // Merge sports: use editHotel.sports array if present, else fall back to legacy single sport
+    const sportsArray: string[] = Array.isArray(editHotel.sports) && editHotel.sports.length > 0
+      ? editHotel.sports
+      : (editHotel.sport ? [editHotel.sport] : []);
+
+    const SPORTS_CONF: Record<string, string> = {
+      ski: "Лижі / Фрірайд", snowboard: "Сноубординг", climbing: "Скелелазіння",
+      diving: "Дайвінг", caving: "Кейвдайвінг", rafting: "Рафтинг",
+      surfing: "Серфінг", kitesurfing: "Кайтсерфінг", motocross: "Мотокрос",
+      cycling: "Велоспорт", paragliding: "Парапланеризм", kayaking: "Каякінг",
+      bungee: "Банджі-джампінг", hiking: "Хайкінг"
+    };
+    const sportLabel = sportsArray.map(s => SPORTS_CONF[s] || s).join(' / ');
+    const sport = sportsArray[0] || 'ski'; // legacy primary sport
+
     const payload = {
       ...editHotel,
       images,
+      sports: sportsArray,
+      sport,
+      sportLabel,
       imageUrl: editHotel.imageUrl || editHotel.image_url || '',
-      sportLabel: editHotel.sportLabel || editHotel.sport_label || '',
     };
 
     const res = await fetch(isNew ? "/api/admin/hotels" : `/api/admin/hotels/${editHotel.id}`, {
@@ -447,7 +464,7 @@ export default function AdminPage() {
                     {userRole === 'ROLE_ADMIN' && (
                       <button
                         onClick={() => {
-                          setEditHotel({ name: "", location: "", sport: "ski", sportLabel: "Лижі", price: 0, imageUrl: "", description: "", stars: 4, reviews: 0 });
+                          setEditHotel({ name: "", location: "", sports: [], sport: "ski", sportLabel: "", price: 0, imageUrl: "", description: "", stars: 4, reviews: 0 });
                           setEditImages(['']);
                         }}
                         className="bg-[#C8102E] text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-[#a00d25] transition-colors flex items-center gap-2"
@@ -1227,28 +1244,51 @@ export default function AdminPage() {
                 <label className="text-white/50 text-xs mb-1 block">Локація</label>
                 <input required value={editHotel.location} onChange={e => setEditHotel({ ...editHotel, location: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white outline-none" />
               </div>
-              <div className="col-span-2 md:col-span-1">
-                <label className="text-white/50 text-xs mb-1 block">Вид спорту</label>
-                <select
-                  required
-                  value={editHotel.sport}
-                  onChange={e => {
-                    const sportsConf: Record<string, string> = {
-                      ski: "Лижі / Фрірайд", climbing: "Скелелазіння", diving: "Дайвінг та кейвдайвінг",
-                      rafting: "Рафтинг", surfing: "Серфінг", motocross: "Мотокрос"
-                    };
-                    setEditHotel({ ...editHotel, sport: e.target.value, sportLabel: sportsConf[e.target.value] });
-                  }}
-                  className="w-full bg-[#1a1a2e] border border-white/10 rounded-xl px-3 py-2 text-white outline-none"
-                >
-                  <option value="ski">Лижі</option>
-                  <option value="climbing">Скелелазіння</option>
-                  <option value="diving">Дайвінг та кейвдайвінг</option>
-                  <option value="rafting">Рафтинг</option>
-                  <option value="surfing">Серфінг</option>
-                  <option value="motocross">Мотокрос</option>
-                </select>
+              <div className="col-span-2">
+                <label className="text-white/50 text-xs mb-2 block">Категорії відпочинку <span className="text-white/30">(оберіть одну або кілька)</span></label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {([
+                    { id: 'ski', label: '⛷ Лижі' },
+                    { id: 'climbing', label: '🧗 Скелелазіння' },
+                    { id: 'diving', label: '🤿 Дайвінг та кейвдайвінг' },
+                    { id: 'rafting', label: '🚣 Рафтинг' },
+                    { id: 'surfing', label: '🏄 Серфінг' },
+                    { id: 'motocross', label: '🏍 Мотокрос' },
+                  ] as { id: string; label: string }[]).map(sp => {
+                    const currentSports: string[] = Array.isArray(editHotel.sports)
+                      ? editHotel.sports
+                      : (editHotel.sport ? [editHotel.sport] : []);
+                    const isSelected = currentSports.includes(sp.id);
+                    return (
+                      <button
+                        type="button"
+                        key={sp.id}
+                        onClick={() => {
+                          const current: string[] = Array.isArray(editHotel.sports)
+                            ? editHotel.sports
+                            : (editHotel.sport ? [editHotel.sport] : []);
+                          const next = isSelected
+                            ? current.filter((s: string) => s !== sp.id)
+                            : [...current, sp.id];
+                          setEditHotel({ ...editHotel, sports: next });
+                        }}
+                        className={`px-3 py-2 rounded-xl text-xs font-medium border transition-all text-left ${
+                          isSelected
+                            ? 'bg-[#C8102E] border-[#C8102E] text-white'
+                            : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        {sp.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {(() => {
+                  const s: string[] = Array.isArray(editHotel.sports) ? editHotel.sports : (editHotel.sport ? [editHotel.sport] : []);
+                  return s.length === 0 && <p className="text-red-400/70 text-xs mt-1">Оберіть хоча б одну категорію</p>;
+                })()}
               </div>
+
               <div className="col-span-2 md:col-span-1">
                 <label className="text-white/50 text-xs mb-1 block">Ціна за ніч</label>
                 <input type="number" required value={editHotel.price} onChange={e => setEditHotel({ ...editHotel, price: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white outline-none" />

@@ -14,16 +14,17 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
     }
 
     const body = await req.json();
-    const { name, location, sport, sportLabel, stars, price, imageUrl, description, reviews, images, amenities } = body;
+    const { name, location, sport, sportLabel, sports, stars, price, imageUrl, description, reviews, images, amenities } = body;
 
     const imagesJson = JSON.stringify(Array.isArray(images) ? images : []);
     const amenitiesJson = JSON.stringify(Array.isArray(amenities) ? amenities : []);
+    const sportsJson = JSON.stringify(Array.isArray(sports) ? sports : (sport ? [sport] : []));
 
     await pool.query(`
       UPDATE rb_hotels 
-      SET name=?, location=?, sport=?, sport_label=?, stars=?, price=?, image_url=?, description=?, reviews=?, images=?, amenities=?
+      SET name=?, location=?, sport=?, sport_label=?, sports=?, stars=?, price=?, image_url=?, description=?, reviews=?, images=?, amenities=?
       WHERE id=?
-    `, [name, location, sport, sportLabel, stars, price, imageUrl, description || '', reviews || 0, imagesJson, amenitiesJson, params.id]);
+    `, [name, location, sport, sportLabel, sportsJson, stars, price, imageUrl, description || '', reviews || 0, imagesJson, amenitiesJson, params.id]);
 
 
 

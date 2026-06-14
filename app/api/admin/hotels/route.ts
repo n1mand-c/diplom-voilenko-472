@@ -39,7 +39,13 @@ export async function GET(req: Request) {
         try { amenities = JSON.parse(amenities); } catch(e) { amenities = []; }
       }
       if (!Array.isArray(amenities)) amenities = [];
-      return { ...h, images, amenities };
+      // Parse sports array (new multi-sport field)
+      let sports = h.sports;
+      if (typeof sports === 'string') {
+        try { sports = JSON.parse(sports); } catch(e) { sports = []; }
+      }
+      if (!Array.isArray(sports)) sports = h.sport ? [h.sport] : [];
+      return { ...h, images, amenities, sports };
     });
 
     return NextResponse.json({ hotels: parsedRows });
@@ -57,15 +63,16 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, location, sport, sportLabel, stars, price, imageUrl, description, reviews, images, amenities } = body;
+    const { name, location, sport, sportLabel, sports, stars, price, imageUrl, description, reviews, images, amenities } = body;
 
     const imagesJson = JSON.stringify(Array.isArray(images) ? images : []);
     const amenitiesJson = JSON.stringify(Array.isArray(amenities) ? amenities : []);
+    const sportsJson = JSON.stringify(Array.isArray(sports) ? sports : (sport ? [sport] : []));
 
     const [result]: any = await pool.query(`
-      INSERT INTO rb_hotels (name, location, sport, sport_label, stars, price, image_url, description, reviews, images, amenities)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [name, location, sport, sportLabel, stars || 4, price, imageUrl, description || '', reviews || 0, imagesJson, amenitiesJson]);
+      INSERT INTO rb_hotels (name, location, sport, sport_label, sports, stars, price, image_url, description, reviews, images, amenities)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [name, location, sport, sportLabel, sportsJson, stars || 4, price, imageUrl, description || '', reviews || 0, imagesJson, amenitiesJson]);
 
     const hotelId = result.insertId;
 

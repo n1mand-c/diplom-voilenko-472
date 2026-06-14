@@ -12,13 +12,15 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.username || !form.email || !form.password || !form.confirmPassword) {
       return setError("Всі поля обов'язкові для заповнення");
     }
-    if (!form.email.includes("@")) {
-      return setError("Email повинен містити символ @");
+    if (!emailRegex.test(form.email)) {
+      return setError("Введіть коректний email (наприклад: user@gmail.com)");
     }
     if (form.password.length < 6) {
       return setError("Пароль має містити мінімум 6 символів");
